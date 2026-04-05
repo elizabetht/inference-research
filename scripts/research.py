@@ -28,11 +28,11 @@ REPOS = [
 ]
 
 ARXIV_QUERIES = [
-    "LLM inference serving optimization",
-    "KV cache management language model inference",
-    "speculative decoding inference acceleration",
-    "prefill decode disaggregation LLM",
-    "continuous batching language model serving",
+    "ti:inference AND ti:serving",
+    "ti:speculative AND ti:decoding",
+    "ti:KV cache AND ti:LLM",
+    "abs:prefill decode disaggregation",
+    "abs:PagedAttention OR abs:RadixAttention",
 ]
 
 LOOKBACK_DAYS = 1  # PRs merged in last N days (2 on weekends via cron logic)
@@ -91,16 +91,13 @@ def fetch_recent_releases(repo_slug: str, token: str) -> list[dict]:
 
 def fetch_arxiv(query: str, max_results: int = 5) -> list[dict]:
     """Search arXiv for recent inference papers."""
-    params = urllib.parse.urlencode({
-        "search_query": f"all:{query}",
-        "start": 0,
-        "max_results": max_results,
-        "sortBy": "submittedDate",
-        "sortOrder": "descending",
-    })
+    # Build URL manually to avoid double-encoding of boolean operators
+    encoded_query = urllib.parse.quote(query, safe=":()+")
+    params = f"search_query={encoded_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending"
     url = f"https://export.arxiv.org/api/query?{params}"
     try:
-        with urllib.request.urlopen(url, timeout=30) as r:
+        req = urllib.request.Request(url, headers={"User-Agent": "inference-radar/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
             root = ET.fromstring(r.read())
     except Exception as e:
         print(f"  arXiv error for '{query}': {e}")
