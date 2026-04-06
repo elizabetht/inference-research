@@ -30,7 +30,7 @@ experiments:
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
   date_run: '2026-04-06'
 - name: vllm-higher-mem-utilization-pp2
-  status: queued
+  status: failed
   priority: 2
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -40,6 +40,7 @@ experiments:
   hypothesis: More KV cache blocks available → better batching → higher throughput
   expected_delta: +10-15% throughput if Ray overhead allows
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
+  date_run: '2026-04-06'
 - name: vllm-prefix-caching-pp2
   status: queued
   priority: 3
