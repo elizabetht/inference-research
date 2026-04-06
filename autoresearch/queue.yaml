@@ -17,7 +17,7 @@ experiments:
     notes: First deployment — SGLang on spark-01 was consuming GPU, required pkill
       before deploy
 - name: vllm-chunked-prefill-pp2
-  status: failed
+  status: queued
   priority: 1
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -28,9 +28,8 @@ experiments:
     p99 at c=32
   expected_delta: -20% TTFT p99, throughput neutral or slight regression
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
-  date_run: '2026-04-06'
 - name: vllm-higher-mem-utilization-pp2
-  status: failed
+  status: queued
   priority: 2
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -40,9 +39,8 @@ experiments:
   hypothesis: More KV cache blocks available → better batching → higher throughput
   expected_delta: +10-15% throughput if Ray overhead allows
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
-  date_run: '2026-04-06'
 - name: vllm-prefix-caching-pp2
-  status: failed
+  status: queued
   priority: 3
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -53,9 +51,8 @@ experiments:
   hypothesis: System prompts cached across requests → reduced TTFT for repeated prefixes
   expected_delta: -30% TTFT p50 for prompts sharing a system prefix
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
-  date_run: '2026-04-06'
 - name: sglang-baseline-qwen3-coder-next
-  status: queued
+  status: failed
   priority: 4
   framework: sglang
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -64,7 +61,9 @@ experiments:
   variable_changed: framework switch from vllm to sglang
   hypothesis: SGLang RadixAttention + piecewise CUDA graph faster under saturation
   expected_delta: +10-20% throughput at c=32 vs vllm baseline
-  image: ghcr.io/elizabetht/inference-images/sglang-serve:latest
+  image: lmsysorg/sglang:nightly-dev-cu13-20260318-cb1e63ab
+  endpoint: http://192.168.1.201:8000
+  date_run: '2026-04-06'
 - name: vllm-no-enforce-eager-pp2
   status: queued
   priority: 5
