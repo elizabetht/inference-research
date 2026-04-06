@@ -42,7 +42,7 @@ experiments:
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
   date_run: '2026-04-06'
 - name: vllm-prefix-caching-pp2
-  status: queued
+  status: failed
   priority: 3
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -53,6 +53,7 @@ experiments:
   hypothesis: System prompts cached across requests → reduced TTFT for repeated prefixes
   expected_delta: -30% TTFT p50 for prompts sharing a system prefix
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
+  date_run: '2026-04-06'
 - name: sglang-baseline-qwen3-coder-next
   status: queued
   priority: 4
