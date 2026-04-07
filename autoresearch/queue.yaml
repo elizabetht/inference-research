@@ -42,7 +42,7 @@ experiments:
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
   date_run: '2026-04-06'
 - name: vllm-prefix-caching-pp2
-  status: done
+  status: failed
   priority: 3
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -53,16 +53,11 @@ experiments:
   hypothesis: System prompts cached across requests → reduced TTFT for repeated prefixes
   expected_delta: -30% TTFT p50 for prompts sharing a system prefix
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
+  notes: Previous run produced all-zero primary (c=32 0/50 ok) — endpoint was degraded
+    from race condition; requeuied for clean run
   date_run: '2026-04-07'
-  result:
-    throughput_tok_s: 0
-    ttft_p50_ms: 0
-    ttft_p99_ms: 0
-    itl_p50_ms: 0
-    itl_p99_ms: 0
-    notes: throughput=0 ttft_p50=0
 - name: sglang-baseline-qwen3-coder-next
-  status: failed
+  status: queued
   priority: 4
   framework: sglang
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -75,7 +70,7 @@ experiments:
   endpoint: http://192.168.1.201:8000
   date_run: '2026-04-07'
 - name: vllm-no-enforce-eager-pp2
-  status: failed
+  status: queued
   priority: 5
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -86,16 +81,15 @@ experiments:
   expected_delta: +15% throughput if capture succeeds on GB10
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1
   risk: may hang or OOM on GB10 unified memory — monitor closely
-  date_run: '2026-04-07'
 - name: vllm-speculative-decoding-pp2
-  status: running
+  status: queued
   priority: 6
   framework: vllm
   model: Qwen/Qwen3-Coder-Next-FP8
   node_config: pp2-spark01-spark02
   description: Enable speculative decoding with a draft model
-  variable_changed: add --speculative-model Qwen/Qwen3-0.6B --num-speculative-tokens
-    5
+  variable_changed: add --speculative-config JSON (vLLM 0.18.0 syntax — replaced --speculative-model
+    / --num-speculative-tokens)
   hypothesis: Draft model proposes tokens, target verifies in parallel → lower TPOT
   expected_delta: -30% ITL p50 for typical completion lengths
   image: ghcr.io/elizabetht/inference-images/vllm-serve:0.0.1

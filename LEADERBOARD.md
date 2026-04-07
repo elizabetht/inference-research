@@ -1,5 +1,5 @@
 # Inference Autoresearch Leaderboard
-_Updated: 2026-04-07 02:57 UTC_
+_Updated: 2026-04-07 03:59 UTC_
 
 | Rank | Experiment | Framework | Model | Throughput (tok/s) | TTFT p50 (ms) | ITL p50 (ms) |
 |------|-----------|-----------|-------|-------------------|---------------|-------------|
