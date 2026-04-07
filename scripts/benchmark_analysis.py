@@ -21,7 +21,9 @@ import urllib.request
 from pathlib import Path
 
 
-ANTHROPIC_MODEL = "claude-opus-4-6"
+# Local LLM endpoint (SGLang on spark-01, tunnelled to localhost:30001 by run_nightly.sh)
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://192.168.1.200:8000")
+LLM_MODEL    = os.environ.get("LLM_MODEL",    "Qwen/Qwen3-Coder-Next-FP8")
 
 CLUSTER_SPEC = """
 2-node DGX Spark cluster:
@@ -34,31 +36,23 @@ CLUSTER_SPEC = """
 """
 
 
-def claude_analyze(prompt: str, api_key: str) -> str:
+def llm_analyze(prompt: str) -> str:
     payload = json.dumps({
-        "model": ANTHROPIC_MODEL,
+        "model": LLM_MODEL,
         "max_tokens": 4096,
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
     req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
+        f"{LLM_BASE_URL}/v1/chat/completions",
         data=payload,
-        headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
+        headers={"content-type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=120) as r:
+    with urllib.request.urlopen(req, timeout=180) as r:
         resp = json.loads(r.read())
-    return resp["content"][0]["text"]
+    return resp["choices"][0]["message"]["content"]
 
 
 def main():
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        sys.exit("ERROR: ANTHROPIC_API_KEY not set")
-
     today = datetime.date.today()
     repo_root = Path(__file__).parent.parent
 
@@ -81,7 +75,7 @@ def main():
     You have access to the following cluster:
     {CLUSTER_SPEC}
 
-    Below is today's inference-radar curation report. Your job is to produce a concrete, runnable benchmark plan.
+    Below is today's inference-research curation report. Your job is to produce a concrete, runnable benchmark plan.
 
     FORMAT:
     ## Benchmark Plan — {today}
@@ -116,8 +110,8 @@ def main():
     {curation_text[:6000]}
     """).strip()
 
-    print(f"[benchmark-analysis] Generating benchmark plan for {today}...")
-    plan = claude_analyze(prompt, api_key)
+    print(f"[benchmark-analysis] Generating benchmark plan for {today} via {LLM_MODEL}...")
+    plan = llm_analyze(prompt)
 
     out_dir = repo_root / "benchmarks"
     out_dir.mkdir(exist_ok=True)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-inference-radar: Automated daily curation of inference engine improvements.
+inference-research: Automated daily curation of inference engine improvements.
 
 Targets: vLLM, SGLang, TensorRT-LLM, llm-d, Dynamo
 Runs nightly at 2am. Saves dated markdown to curations/YYYY-MM-DD.md
@@ -36,7 +36,10 @@ ARXIV_QUERIES = [
 ]
 
 LOOKBACK_DAYS = 1  # PRs merged in last N days (2 on weekends via cron logic)
-ANTHROPIC_MODEL = "claude-opus-4-6"
+
+# Local LLM endpoint (SGLang on spark-01, tunnelled to localhost:30001 by run_nightly.sh)
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://192.168.1.200:8000")
+LLM_MODEL    = os.environ.get("LLM_MODEL",    "Qwen/Qwen3-Coder-Next-FP8")
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -46,7 +49,7 @@ def gh_api(path: str, token: str) -> dict | list:
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "inference-radar/1.0",
+        "User-Agent": "inference-research/1.0",
     })
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read())
@@ -96,7 +99,7 @@ def fetch_arxiv(query: str, max_results: int = 5) -> list[dict]:
     params = f"search_query={encoded_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending"
     url = f"https://export.arxiv.org/api/query?{params}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "inference-radar/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "inference-research/1.0"})
         with urllib.request.urlopen(req, timeout=30) as r:
             root = ET.fromstring(r.read())
     except Exception as e:
@@ -115,42 +118,35 @@ def fetch_arxiv(query: str, max_results: int = 5) -> list[dict]:
     return papers
 
 
-def claude_curate(prompt: str, api_key: str) -> str:
-    """Call Claude API to curate/analyze content."""
+def llm_curate(prompt: str) -> str:
+    """Call the local SGLang endpoint (OpenAI-compatible) to curate/analyze content."""
     payload = json.dumps({
-        "model": ANTHROPIC_MODEL,
+        "model": LLM_MODEL,
         "max_tokens": 4096,
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
     req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
+        f"{LLM_BASE_URL}/v1/chat/completions",
         data=payload,
-        headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
+        headers={"content-type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=120) as r:
+    with urllib.request.urlopen(req, timeout=180) as r:
         resp = json.loads(r.read())
-    return resp["content"][0]["text"]
+    return resp["choices"][0]["message"]["content"]
 
 
 # ── Main pipeline ─────────────────────────────────────────────────────────────
 
 def main():
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not token:
         sys.exit("ERROR: GITHUB_TOKEN or GH_TOKEN not set")
-    if not api_key:
-        sys.exit("ERROR: ANTHROPIC_API_KEY not set")
 
     today = datetime.date.today()
     since = (datetime.datetime.utcnow() - datetime.timedelta(days=LOOKBACK_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     since_iso = since
 
-    print(f"[inference-radar] {today} — fetching updates since {since_iso}")
+    print(f"[inference-research] {today} — fetching updates since {since_iso}")
 
     # ── 1. GitHub PRs and releases per repo ─────────────────────────────────
     all_prs = {}
@@ -232,11 +228,11 @@ def main():
     {raw_context}
     """).strip()
 
-    print("  → Calling Claude for curation...")
+    print(f"  → Calling local LLM ({LLM_MODEL}) for curation...")
     try:
-        curation = claude_curate(prompt, api_key)
+        curation = llm_curate(prompt)
     except Exception as e:
-        sys.exit(f"ERROR calling Claude: {e}")
+        sys.exit(f"ERROR calling local LLM at {LLM_BASE_URL}: {e}")
 
     # ── 5. Save output ───────────────────────────────────────────────────────
     out_dir = Path(__file__).parent.parent / "curations"
@@ -264,7 +260,7 @@ sources:
         "arxiv": arxiv_papers,
     }, indent=2))
 
-    print(f"\n[inference-radar] Done. Curation saved to curations/{today}.md")
+    print(f"\n[inference-research] Done. Curation saved to curations/{today}.md")
     return str(out_path)
 
 

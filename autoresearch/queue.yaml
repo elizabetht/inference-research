@@ -57,7 +57,7 @@ experiments:
     from race condition; requeuied for clean run
   date_run: '2026-04-07'
 - name: sglang-baseline-qwen3-coder-next
-  status: queued
+  status: running
   priority: 4
   framework: sglang
   model: Qwen/Qwen3-Coder-Next-FP8

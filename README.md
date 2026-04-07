@@ -1,4 +1,4 @@
-# inference-radar
+# inference-research
 
 Automated nightly curation of LLM inference engine improvements — vLLM, SGLang, TensorRT-LLM, llm-d, Dynamo — with concrete benchmark plans for the home DGX Spark cluster.
 
@@ -66,8 +66,8 @@ controller 192.168.1.75  CPU only   orchestrates workers
 ### 1. Dependencies
 
 ```bash
-python3 -m venv ~/.venvs/inference-radar
-source ~/.venvs/inference-radar/bin/activate
+python3 -m venv ~/.venvs/inference-research
+source ~/.venvs/inference-research/bin/activate
 pip install anthropic requests
 ```
 
@@ -90,7 +90,7 @@ python3 scripts/benchmark_analysis.py
 Runs via `crontab` on the controller at `2:00am` daily:
 
 ```cron
-0 2 * * * /home/nvidia/src/github.com/elizabetht/inference-radar/scripts/run_nightly.sh
+0 2 * * * /home/nvidia/src/github.com/elizabetht/inference-research/scripts/run_nightly.sh
 ```
 
 ---
