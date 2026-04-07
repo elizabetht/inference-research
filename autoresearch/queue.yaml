@@ -62,7 +62,7 @@ experiments:
     itl_p99_ms: 0
     notes: throughput=0 ttft_p50=0
 - name: sglang-baseline-qwen3-coder-next
-  status: queued
+  status: failed
   priority: 4
   framework: sglang
   model: Qwen/Qwen3-Coder-Next-FP8
@@ -73,6 +73,7 @@ experiments:
   expected_delta: +10-20% throughput at c=32 vs vllm baseline
   image: lmsysorg/sglang:nightly-dev-cu13-20260318-cb1e63ab
   endpoint: http://192.168.1.201:8000
+  date_run: '2026-04-07'
 - name: vllm-no-enforce-eager-pp2
   status: queued
   priority: 5

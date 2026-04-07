@@ -7,3 +7,4 @@ vllm-chunked-prefill-pp2	vllm	Qwen/Qwen3-Coder-Next-FP8	pp2-spark01-spark02					
 vllm-chunked-prefill-pp2	vllm	Qwen/Qwen3-Coder-Next-FP8	pp2-spark01-spark02						failed	2026-04-06	run_experiment.py exit=1
 vllm-higher-mem-utilization-pp2	vllm	Qwen/Qwen3-Coder-Next-FP8	pp2-spark01-spark02						failed	2026-04-06	run_experiment.py exit=1
 vllm-prefix-caching-pp2	vllm	Qwen/Qwen3-Coder-Next-FP8	pp2-spark01-spark02	0	0	0	0	0	done	2026-04-07	throughput=0 ttft_p50=0
+sglang-baseline-qwen3-coder-next	sglang	Qwen/Qwen3-Coder-Next-FP8	single-spark01						failed	2026-04-07	timeout after 90m
