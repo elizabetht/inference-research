@@ -1,5 +1,6 @@
 # Inference Autoresearch Leaderboard
-_Updated: 2026-04-06 23:31 UTC_
+_Updated: 2026-04-07 00:24 UTC_
 
 | Rank | Experiment | Framework | Model | Throughput (tok/s) | TTFT p50 (ms) | ITL p50 (ms) |
 |------|-----------|-----------|-------|-------------------|---------------|-------------|
+| 1 | vllm-prefix-caching-pp2 | vllm | Qwen3-Coder-Next-FP8 | 0 | 0 | 0 |
