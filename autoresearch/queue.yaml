@@ -108,7 +108,8 @@ experiments:
         Key finding: prefix cache is essential for low-latency high-concurrency serving.
 
   - name: qwen25-7b-llmd-chunked-prefill
-    status: pending
+    status: completed
+    date_run: '2026-04-08'
     priority: 4
     depends_on: qwen25-7b-llmd-baseline
     framework: llm-d
@@ -130,6 +131,16 @@ experiments:
     expected_metrics:
       ttft_p99_delta: -20% to -30% at c=32
       throughput_delta: neutral
+    result:
+      c1:  { throughput_tok_s: 12.6,  ttft_p50_ms: 80.0,  ttft_p99_ms: 177.0,  itl_p50_ms: 79.2, itl_p99_ms: 79.7,  ok: 50 }
+      c8:  { throughput_tok_s: 108.6, ttft_p50_ms: 200.0, ttft_p99_ms: 3330.0, itl_p50_ms: 63.7, itl_p99_ms: 63.7,  ok: 50 }
+      c32: { throughput_tok_s: 354.1, ttft_p50_ms: 239.0, ttft_p99_ms: 315.0,  itl_p50_ms: 70.5, itl_p99_ms: 70.6,  ok: 50 }
+      notes: >
+        Chunked prefill reduces TTFT p50 at c=32 by -27% (327ms→239ms) vs llm-d baseline.
+        TTFT p99 at c=32 dropped -14% (367ms→315ms) — below the -20-30% hypothesis.
+        c=8 HOL blocking not fixed (p99 3399ms→3330ms, -2%) — requires prefix cache for that.
+        Throughput +1.7% at c=32. Key finding: chunked prefill helps high-concurrency
+        latency but prefix cache is the primary lever for c=8 tail latency.
 
   - name: qwen25-7b-llmd-higher-mem
     status: pending
