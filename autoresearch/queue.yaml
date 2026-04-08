@@ -209,7 +209,8 @@ experiments:
         GB10 SM121 FP8 tensor cores do not compensate for per-access quantize/dequantize cost.
 
   - name: qwen25-7b-llmd-spec-decoding
-    status: pending
+    status: completed
+    date_run: '2026-04-08'
     priority: 7
     depends_on: qwen25-7b-llmd-fp8-kv
     framework: llm-d
@@ -234,6 +235,16 @@ experiments:
     expected_metrics:
       itl_p50_delta: -30% to -50%
       throughput_delta: +10% to +20%
+    result:
+      c1:  { throughput_tok_s: 12.6, ttft_p50_ms: 80.0,  ttft_p99_ms: 142.0, itl_p50_ms: 79.9, itl_p99_ms: 82.7,  ok: 50 }
+      c8:  { throughput_tok_s: 100.0, ttft_p50_ms: 143.0, ttft_p99_ms: 244.0, itl_p50_ms: 69.7, itl_p99_ms: 75.8,  ok: 50 }
+      c32: { throughput_tok_s: 304.6, ttft_p50_ms: 170.0, ttft_p99_ms: 173.0, itl_p50_ms: 76.6, itl_p99_ms: 89.6,  ok: 50 }
+      notes: >
+        Spec decoding HURT throughput (-9%, 334.5→304.6 tok/s at c=32) and ITL (+10% worse).
+        TTFT improved: p50 at c=32 -31% (248→170ms), c=8 p99 -93% (3458→244ms) — warm cache effect.
+        Low ngram acceptance rate at high concurrency drives proposal overhead without yield.
+        Hypothesis of -30-50% ITL improvement NOT confirmed. ITL worsened.
+        Key finding: ngram spec decoding unsuitable for diverse completions at high concurrency.
 
   - name: qwen25-7b-llmd-cuda-graphs
     status: pending
