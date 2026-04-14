@@ -41,10 +41,10 @@ pip install -q --upgrade aiohttp pyyaml requests 2>>"$DAILY_LOG" || true
 # ── 1. Daily research scan ────────────────────────────────────────────────────
 log "--- Step 1: daily research scan ---"
 if command -v claude >/dev/null 2>&1; then
-  claude --dangerously-skip-permissions \
+  (cd "$REPO" && claude --dangerously-skip-permissions \
     --print \
     "/daily-research $DATE" \
-    2>&1 | tee -a "$DAILY_LOG" || log "WARNING: claude /daily-research failed"
+    2>&1) | tee -a "$DAILY_LOG" || log "WARNING: claude /daily-research failed"
 else
   log "WARNING: claude CLI not found — falling back to research.py"
   python3 "$REPO/scripts/research.py" 2>&1 | tee -a "$DAILY_LOG" || \
