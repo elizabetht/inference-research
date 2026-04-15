@@ -96,7 +96,7 @@ done
 
 # ── 5. Commit and push ────────────────────────────────────────────────────────
 log "--- Step 5: commit + push ---"
-git -C "$REPO_DIR" add curations/ benchmarks/ logs/
+git -C "$REPO_DIR" add curations/ benchmarks/
 git -C "$REPO_DIR" diff --cached --quiet && \
   log "Nothing to commit" || \
   git -C "$REPO_DIR" commit -m "chore: nightly run $DATE" \
