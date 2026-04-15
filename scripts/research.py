@@ -234,6 +234,9 @@ def main():
     print(f"  → Calling local LLM ({LLM_MODEL}) for curation...")
     try:
         curation = llm_curate(prompt)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors="replace")[:500]
+        sys.exit(f"ERROR calling local LLM at {LLM_BASE_URL}: HTTP {e.code}\nBody: {body}")
     except Exception as e:
         sys.exit(f"ERROR calling local LLM at {LLM_BASE_URL}: {e}")
 
