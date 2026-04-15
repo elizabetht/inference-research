@@ -39,7 +39,7 @@ LOOKBACK_DAYS = 1  # PRs merged in last N days (2 on weekends via cron logic)
 
 # Local LLM endpoint (SGLang on spark-01, tunnelled to localhost:30001 by run_nightly.sh)
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://192.168.1.200:8000")
-LLM_MODEL    = os.environ.get("LLM_MODEL",    "Qwen/Qwen3-Coder-Next-FP8")
+LLM_MODEL    = os.environ.get("LLM_MODEL",    "Qwen/Qwen2.5-7B-Instruct")
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -128,7 +128,7 @@ def llm_curate(prompt: str) -> str:
     req = urllib.request.Request(
         f"{LLM_BASE_URL}/v1/chat/completions",
         data=payload,
-        headers={"content-type": "application/json"},
+        headers={"content-type": "application/json", "host": "api.tokenlabs.run"},
     )
     with urllib.request.urlopen(req, timeout=180) as r:
         resp = json.loads(r.read())
