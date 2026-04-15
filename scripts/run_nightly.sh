@@ -26,13 +26,13 @@ log() { echo "[$(date -u +%T)] $*" | tee -a "$LOG_FILE"; }
 # ── SSH tunnel to spark-01 SGLang ─────────────────────────────────────────────
 
 if ! curl -sf "http://${LLM_EXT}:${LLM_PORT}/health" >/dev/null 2>&1; then
-  log "ERROR: vLLM not reachable at ${LLM_EXT}:${LLM_PORT} — check qwen3-coder-next pods in token-labs"
+  log "ERROR: LLM gateway not reachable at ${LLM_EXT}:${LLM_PORT} — check inference pods in token-labs"
   exit 1
 fi
 log "LLM endpoint ready: http://${LLM_EXT}:${LLM_PORT}"
 
 export LLM_BASE_URL="http://${LLM_EXT}:${LLM_PORT}"
-export LLM_MODEL="Qwen/Qwen3-Coder-Next-FP8"
+export LLM_MODEL="meta-llama/Llama-3.1-8B-Instruct"
 
 # GitHub token: gh CLI fallback
 if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GH_TOKEN:-}" ]; then
