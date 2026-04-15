@@ -14,6 +14,7 @@ import datetime
 import textwrap
 import urllib.request
 import urllib.parse
+import http.client
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -130,13 +131,20 @@ def llm_curate(prompt: str) -> str:
         "max_tokens": 1024,
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
-    req = urllib.request.Request(
-        f"{LLM_BASE_URL}/v1/chat/completions",
-        data=payload,
-        headers={"content-type": "application/json", "host": "api.tokenlabs.run"},
+    parsed = urllib.parse.urlparse(LLM_BASE_URL)
+    host = parsed.hostname
+    port = parsed.port or 80
+    conn = http.client.HTTPConnection(host, port, timeout=180)
+    conn.request(
+        "POST", "/v1/chat/completions", body=payload,
+        headers={"Content-Type": "application/json", "Host": "api.tokenlabs.run"},
     )
-    with urllib.request.urlopen(req, timeout=180) as r:
-        resp = json.loads(r.read())
+    r = conn.getresponse()
+    if r.status != 200:
+        body = r.read(512).decode(errors="replace")
+        raise Exception(f"HTTP {r.status}: {body}")
+    resp = json.loads(r.read())
+    conn.close()
     return resp["choices"][0]["message"]["content"]
 
 
