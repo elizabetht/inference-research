@@ -32,7 +32,19 @@ fi
 log "LLM endpoint ready: http://${LLM_EXT}:${LLM_PORT}"
 
 export LLM_BASE_URL="http://${LLM_EXT}:${LLM_PORT}"
-export LLM_MODEL="meta-llama/Llama-3.1-8B-Instruct"
+
+# Model: discover from the gateway rather than pinning a name. The served model
+# changes as deployments in token-labs are swapped; a stale pin 400s every call.
+DISCOVERED=$(curl -sf -H "Host: api.tokenlabs.run" \
+  "http://${LLM_EXT}:${LLM_PORT}/v1/models" \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin)["data"]; print(d[0]["id"] if d else "")' 2>/dev/null || true)
+if [ -n "${DISCOVERED:-}" ]; then
+  export LLM_MODEL="$DISCOVERED"
+  log "LLM model discovered: $LLM_MODEL"
+else
+  log "ERROR: could not discover a served model from the gateway — aborting"
+  exit 1
+fi
 
 # GitHub token: gh CLI fallback
 if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GH_TOKEN:-}" ]; then
@@ -105,5 +117,25 @@ git -C "$REPO_DIR" diff --cached --quiet && \
 
 git -C "$REPO_DIR" push origin main 2>&1 | tee -a "$LOG_FILE" || \
   log "WARNING: push failed (check remote / auth)"
+
+# ── 6. Telegram summary ───────────────────────────────────────────────────────
+TG_TOKEN="${TELEGRAM_BOT_TOKEN:-$(grep -h '^TELEGRAM_BOT_TOKEN=' "$HOME/.claude/channels/telegram/.env" 2>/dev/null | cut -d= -f2-)}"
+TG_CHAT="8622076160"
+CURATION="$REPO_DIR/curations/$DATE.md"
+if [ -n "${TG_TOKEN:-}" ] && [ -f "$CURATION" ]; then
+  log "--- Step 6: telegram summary ---"
+  SUMMARY=$(head -c 2500 "$CURATION")
+  curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+    --data-urlencode "chat_id=${TG_CHAT}" \
+    --data-urlencode "disable_web_page_preview=true" \
+    --data-urlencode "text=inference-research nightly $DATE
+
+${SUMMARY}
+
+https://github.com/elizabetht/inference-research/tree/main/curations" \
+    >/dev/null 2>&1 && log "telegram sent" || log "WARNING: telegram send failed"
+else
+  log "--- Step 6: telegram skipped (no token or no curation for $DATE) ---"
+fi
 
 log "=== Done: $DATE ==="
