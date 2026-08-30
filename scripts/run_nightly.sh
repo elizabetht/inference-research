@@ -25,26 +25,38 @@ log() { echo "[$(date -u +%T)] $*" | tee -a "$LOG_FILE"; }
 
 # ── SSH tunnel to spark-01 SGLang ─────────────────────────────────────────────
 
-if ! curl -sf -H "Host: api.tokenlabs.run" "http://${LLM_EXT}:${LLM_PORT}/v1/models" >/dev/null 2>&1; then
+if ! curl -sf -m 10 -H "Host: api.tokenlabs.run" "http://${LLM_EXT}:${LLM_PORT}/v1/models" -o /tmp/nightly-models.json 2>/dev/null; then
   log "ERROR: LLM gateway not reachable at ${LLM_EXT}:${LLM_PORT} — check inference pods in token-labs"
   exit 1
 fi
-log "LLM endpoint ready: http://${LLM_EXT}:${LLM_PORT}"
+log "LLM endpoint reachable: http://${LLM_EXT}:${LLM_PORT}"
 
 export LLM_BASE_URL="http://${LLM_EXT}:${LLM_PORT}"
 
-# Model: discover from the gateway rather than pinning a name. The served model
-# changes as deployments in token-labs are swapped; a stale pin 400s every call.
-DISCOVERED=$(curl -sf -H "Host: api.tokenlabs.run" \
-  "http://${LLM_EXT}:${LLM_PORT}/v1/models" \
-  | python3 -c 'import json,sys; d=json.load(sys.stdin)["data"]; print(d[0]["id"] if d else "")' 2>/dev/null || true)
-if [ -n "${DISCOVERED:-}" ]; then
-  export LLM_MODEL="$DISCOVERED"
-  log "LLM model discovered: $LLM_MODEL"
-else
-  log "ERROR: could not discover a served model from the gateway — aborting"
+# /v1/models is served by the gateway control plane and answers 200 even when
+# every backend is down, so it is not a readiness signal. Probe each advertised
+# model with a real 1-token completion and take the first that actually serves.
+MODELS=$(python3 -c 'import json;print("\n".join(m["id"] for m in json.load(open("/tmp/nightly-models.json"))["data"]))' 2>/dev/null || true)
+[ -z "${MODELS:-}" ] && { log "ERROR: gateway advertised no models — aborting"; exit 1; }
+
+LLM_MODEL=""
+while IFS= read -r m; do
+  [ -z "$m" ] && continue
+  CODE=$(curl -s -m 30 -o /dev/null -w '%{http_code}' \
+    -H "Host: api.tokenlabs.run" -H 'Content-Type: application/json' \
+    "http://${LLM_EXT}:${LLM_PORT}/v1/chat/completions" \
+    -d "{\"model\":\"$m\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":1}" 2>/dev/null || echo 000)
+  if [ "$CODE" = "200" ]; then
+    LLM_MODEL="$m"; log "LLM model live: $m"; break
+  fi
+  log "model $m not serving (HTTP $CODE) — trying next"
+done <<< "$MODELS"
+
+if [ -z "$LLM_MODEL" ]; then
+  log "ERROR: gateway advertises models but none serve completions — check inference pods in token-labs. Aborting before doing any work."
   exit 1
 fi
+export LLM_MODEL
 
 # GitHub token: gh CLI fallback
 if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GH_TOKEN:-}" ]; then
