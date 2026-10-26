@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Experiment 1",
+    "framework": "vLLM",
+    "version": "",
+    "model": "",
+    "node": "2-Node TP=2 PCP",
+    "status": "fail",
+    "metrics": {},
+    "notes": [
+      "Incomplete benchmark output"
+    ],
+    "raw_output": "STDERR: Setting up Experiment 1: vLLM 2-Node TP=2 PCP"
+  }
+]
