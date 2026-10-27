@@ -1,0 +1,16 @@
+[
+  {
+    "name": "exp1_kimi_k3_vllm_mla",
+    "framework": "vLLM",
+    "version": "latest",
+    "model": "Kimi K3",
+    "node": "spark-01;spark-02",
+    "status": "fail",
+    "metrics": {},
+    "notes": [
+      "ssh: connect to host spark-01 port 22: No route to host",
+      "ssh: connect to host spark-02 port 22: No route to host"
+    ],
+    "raw_output": "Setting up venv on spark-01:192.168.1.76... Launching vLLM Server on spark-01... ssh: connect to host spark-01 port 22: No route to host"
+  }
+]
