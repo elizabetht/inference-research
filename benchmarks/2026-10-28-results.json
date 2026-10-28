@@ -1,0 +1,15 @@
+[
+  {
+    "name": "run.sh_syntax_error",
+    "framework": "bash",
+    "version": "5.1.16",
+    "model": "unknown",
+    "node": "nvidia-gpu-node",
+    "status": "fail",
+    "metrics": {},
+    "notes": [
+      "Syntax error in benchmark script"
+    ],
+    "raw_output": "/home/nvidia/src/github.com/elizabetht/inference-research/benchmarks/2026-10-28-run.sh: line 333: syntax error near unexpected token `}'"
+  }
+]
