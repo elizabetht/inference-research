@@ -1,0 +1,28 @@
+[
+  {
+    "name": "sglang_fused_decode",
+    "framework": "sglang",
+    "version": "main",
+    "model": "Qwen2.5-7B",
+    "node": "192.168.1.76",
+    "status": "skip",
+    "metrics": {},
+    "notes": [
+      "Setup failed"
+    ],
+    "raw_output": ""
+  },
+  {
+    "name": "vllm_fp8_baseline",
+    "framework": "vllm",
+    "version": "latest",
+    "model": "Qwen2.5-7B",
+    "node": "192.168.1.77",
+    "status": "skip",
+    "metrics": {},
+    "notes": [
+      "Setup failed"
+    ],
+    "raw_output": ""
+  }
+]
